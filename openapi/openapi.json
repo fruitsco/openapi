@@ -1,0 +1,1592 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "fruits API",
+    "description": "Public API to interact with your fruits portfolio.",
+    "termsOfService": "https://fruits.co/terms",
+    "contact": {
+      "name": "fruits API Support",
+      "url": "https://fruits.co/contact",
+      "email": "dev@fruits.co"
+    },
+    "version": "${GITHUB_REF_NAME/v/}",
+    "license": {
+      "name": "Apache 2.0",
+      "url": "https://www.apache.org/licenses/LICENSE-2.0.html"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.fruits.co"
+    }
+  ],
+  "tags": [
+    {
+      "name": "domains",
+      "description": "Domain operations"
+    },
+    {
+      "name": "webhooks",
+      "description": "Webhook operations"
+    },
+    {
+      "name": "events",
+      "description": "Event operations"
+    }
+  ],
+  "paths": {
+    "/v1/domains": {
+      "get": {
+        "operationId": "DomainList",
+        "summary": "List domains",
+        "description": "List all domains in your portfolio, with optional filters and pagination.",
+        "tags": [
+          "domains"
+        ],
+        "security": [
+          {
+            "oauth2": [
+              "content.domain.read"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "archived",
+            "description": "Filter domains by archived state",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "currency",
+            "description": "Filter domains by currency",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/Currency"
+            }
+          },
+          {
+            "name": "sort",
+            "description": "The name of the field to sort the domains by",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/DomainSort"
+            }
+          },
+          {
+            "name": "length_min",
+            "description": "Filter domains by minimum length",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "length_max",
+            "description": "Filter domains by maximum length",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "limit",
+            "description": "Limit the domains count of the paginated result",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1000,
+              "maximum": 50000,
+              "minimum": 1
+            }
+          },
+          {
+            "name": "offset",
+            "description": "Offset the domains of the paginated result",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0,
+              "minimum": 0
+            }
+          },
+          {
+            "name": "price_min",
+            "description": "Filter domains by minimum price",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "price_max",
+            "description": "Filter domains by maximum price",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "state",
+            "description": "Filter domains by state",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/DomainState"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/DomainList"
+          },
+          "400": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "404": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationErrorResponse"
+          }
+        }
+      },
+      "put": {
+        "operationId": "DomainUpdateBulk",
+        "summary": "Update domains",
+        "description": "Update a list of domains through a filter.",
+        "tags": [
+          "domains"
+        ],
+        "security": [
+          {
+            "oauth2": [
+              "content.domain.write"
+            ]
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/DomainUpdateBulk"
+        },
+        "responses": {
+          "201": {
+            "description": "Domains updated"
+          },
+          "404": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationErrorResponse"
+          }
+        }
+      }
+    },
+    "/v1/domains/{idOrName}": {
+      "get": {
+        "operationId": "DomainGet",
+        "summary": "Get domain",
+        "description": "Get the details of a domain.",
+        "tags": [
+          "domains"
+        ],
+        "security": [
+          {
+            "oauth2": [
+              "content.domain.read"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "idOrName",
+            "description": "The ID or name of the domain to retrieve",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/DomainGet"
+          },
+          "404": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationErrorResponse"
+          }
+        }
+      }
+    },
+    "/v1/domains/{idOrName}/authcodes": {
+      "post": {
+        "operationId": "DomainAuthCodeCreate",
+        "summary": "Create domain auth code",
+        "description": "Create a new domain auth code for a domain.",
+        "tags": [
+          "domains"
+        ],
+        "security": [
+          {
+            "oauth2": [
+              "content.domain.write"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "idOrName",
+            "description": "The ID or name of the domain to create an auth code for",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/DomainAuthCodeCreate"
+        },
+        "responses": {
+          "201": {
+            "description": "Domain auth code created"
+          },
+          "404": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationErrorResponse"
+          }
+        }
+      }
+    },
+    "/v1/imports": {
+      "post": {
+        "operationId": "DomainImportCreate",
+        "summary": "Create domain import",
+        "description": "Create a new domain import to add and/or update domains.",
+        "tags": [
+          "domains"
+        ],
+        "security": [
+          {
+            "oauth2": [
+              "content.domain.write"
+            ]
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/DomainImportCreate"
+        },
+        "responses": {
+          "201": {
+            "$ref": "#/components/responses/DomainImportCreate"
+          },
+          "404": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationErrorResponse"
+          }
+        }
+      }
+    },
+    "/v1/imports/{id}": {
+      "get": {
+        "operationId": "DomainImportGet",
+        "summary": "Get domain import",
+        "description": "Get the details of a domain import.",
+        "tags": [
+          "domains"
+        ],
+        "security": [
+          {
+            "oauth2": [
+              "content.domain.read"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "description": "The ID of the domain import to retrieve",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/DomainImportGet"
+          },
+          "404": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationErrorResponse"
+          }
+        }
+      }
+    },
+    "/v1/webhooks": {
+      "get": {
+        "operationId": "WebhookList",
+        "summary": "List webhooks",
+        "description": "List all webhooks in your account.",
+        "tags": [
+          "webhooks"
+        ],
+        "security": [
+          {
+            "oauth2": [
+              "account.admin.read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/WebhookList"
+          },
+          "404": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        }
+      },
+      "post": {
+        "operationId": "WebhookCreate",
+        "summary": "Create a webhook",
+        "description": "Create a new webhook in your account.",
+        "tags": [
+          "webhooks"
+        ],
+        "security": [
+          {
+            "oauth2": [
+              "account.admin.write"
+            ]
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/WebhookCreate"
+        },
+        "responses": {
+          "201": {
+            "$ref": "#/components/responses/WebhookCreate"
+          },
+          "404": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationErrorResponse"
+          }
+        }
+      }
+    },
+    "/v1/webhooks/{id}": {
+      "put": {
+        "operationId": "WebhookUpdate",
+        "summary": "Update a webhook",
+        "description": "Update an existing webhook in your account.",
+        "tags": [
+          "webhooks"
+        ],
+        "security": [
+          {
+            "oauth2": [
+              "account.admin.write"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "description": "The ID of the webhook to update",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/WebhookUpdate"
+        },
+        "responses": {
+          "200": {
+            "description": "Webhook updated"
+          },
+          "404": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationErrorResponse"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "WebhookDelete",
+        "summary": "Delete a webhook",
+        "description": "Delete an existing webhook from your account.",
+        "tags": [
+          "webhooks"
+        ],
+        "security": [
+          {
+            "oauth2": [
+              "account.admin.write"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "description": "The ID of the webhook to delete",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Webhook deleted"
+          },
+          "404": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationErrorResponse"
+          }
+        }
+      }
+    }
+  },
+  "webhooks": {
+    "domainSalePending": {
+      "post": {
+        "summary": "Domain Sale Pending",
+        "operationId": "DomainSalePending",
+        "tags": [
+          "events"
+        ],
+        "security": [
+          {
+            "signature": []
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/DomainSalePending"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/WebhookSuccess"
+          }
+        }
+      }
+    },
+    "domainSaleCancelled": {
+      "post": {
+        "summary": "Domain Sale Cancelled",
+        "operationId": "DomainSaleCancelled",
+        "tags": [
+          "events"
+        ],
+        "security": [
+          {
+            "signature": []
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/DomainSaleCancelled"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/WebhookSuccess"
+          }
+        }
+      }
+    },
+    "domainSaleSucceeded": {
+      "post": {
+        "summary": "Domain Sale Succeeded",
+        "operationId": "DomainSaleSucceeded",
+        "tags": [
+          "events"
+        ],
+        "security": [
+          {
+            "signature": []
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/DomainSaleSucceeded"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/WebhookSuccess"
+          }
+        }
+      }
+    },
+    "domainSaleFailed": {
+      "post": {
+        "summary": "Domain Sale Failed",
+        "operationId": "DomainSaleFailed",
+        "tags": [
+          "events"
+        ],
+        "security": [
+          {
+            "signature": []
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/DomainSaleFailed"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/WebhookSuccess"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "signature": {
+        "type": "apiKey",
+        "name": "X-Fruits-Signature",
+        "in": "header"
+      },
+      "oauth2": {
+        "type": "oauth2",
+        "description": "OAuth2 authorization code and client credentials flow.",
+        "flows": {
+          "authorizationCode": {
+            "authorizationUrl": "https://api.fruits.co/oauth2/authorize",
+            "tokenUrl": "https://api.fruits.co/oauth2/token",
+            "scopes": {
+              "content:domain:read": "Read access to domains",
+              "content:domain:write": "Write access to domains",
+              "account:admin:read": "Read access to account",
+              "account:admin:write": "Write access to account"
+            }
+          },
+          "clientCredentials": {
+            "tokenUrl": "https://api.fruits.co/oauth2/token",
+            "scopes": {
+              "platform:account:create": "Write access to accounts"
+            }
+          }
+        }
+      }
+    },
+    "responses": {
+      "WebhookSuccess": {
+        "description": "Webhook successfully processed"
+      },
+      "DomainList": {
+        "description": "List of domains",
+        "content": {
+          "application/json": {
+            "schema": {
+              "title": "DomainListResponse",
+              "type": "object",
+              "properties": {
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Domain"
+                  }
+                },
+                "pagination": {
+                  "$ref": "#/components/schemas/Pagination"
+                }
+              }
+            }
+          }
+        }
+      },
+      "ErrorResponse": {
+        "description": "Error Response",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "ValidationErrorResponse": {
+        "description": "Unprocessable Entity",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ValidationError"
+            }
+          }
+        }
+      },
+      "DomainGet": {
+        "description": "Domain details",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Domain"
+            }
+          }
+        }
+      },
+      "DomainImportCreate": {
+        "description": "Domain import created",
+        "content": {
+          "application/json": {
+            "schema": {
+              "title": "DomainImportCreateResponse",
+              "type": "object",
+              "properties": {
+                "import": {
+                  "$ref": "#/components/schemas/DomainImport"
+                },
+                "diff": {
+                  "$ref": "#/components/schemas/DomainImportDiff"
+                },
+                "stats": {
+                  "$ref": "#/components/schemas/DomainImportStats"
+                }
+              },
+              "required": [
+                "import"
+              ]
+            }
+          }
+        }
+      },
+      "DomainImportGet": {
+        "description": "Domain import details",
+        "content": {
+          "application/json": {
+            "schema": {
+              "title": "DomainImportGetResponse",
+              "type": "object",
+              "properties": {
+                "import": {
+                  "$ref": "#/components/schemas/DomainImport"
+                },
+                "diff": {
+                  "$ref": "#/components/schemas/DomainImportDiff"
+                },
+                "stats": {
+                  "$ref": "#/components/schemas/DomainImportStats"
+                }
+              },
+              "required": [
+                "import"
+              ]
+            }
+          }
+        }
+      },
+      "WebhookList": {
+        "description": "List of webhooks",
+        "content": {
+          "application/json": {
+            "schema": {
+              "title": "WebhookListResponse",
+              "type": "object",
+              "properties": {
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Webhook"
+                  }
+                },
+                "pagination": {
+                  "$ref": "#/components/schemas/Pagination"
+                }
+              }
+            }
+          }
+        }
+      },
+      "WebhookCreate": {
+        "description": "Webhook created",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Webhook"
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "Currency": {
+        "type": "string",
+        "description": "ISO 4217 currency code",
+        "enum": [
+          "EUR",
+          "USD",
+          "GBP",
+          "CHF"
+        ]
+      },
+      "SortOrder": {
+        "type": "string",
+        "description": "Sort order direction",
+        "enum": [
+          "asc",
+          "desc"
+        ]
+      },
+      "DomainSort": {
+        "type": "object",
+        "description": "An object to describe the sorting of domains",
+        "properties": {
+          "field": {
+            "type": "string",
+            "enum": [
+              "name",
+              "price.amount",
+              "created_at"
+            ]
+          },
+          "order": {
+            "$ref": "#/components/schemas/SortOrder"
+          }
+        }
+      },
+      "DomainState": {
+        "type": "string",
+        "description": "The state of a domain",
+        "enum": [
+          "pending",
+          "verifying",
+          "verified",
+          "unverified"
+        ]
+      },
+      "ProductType": {
+        "type": "string",
+        "description": "The type of a product",
+        "enum": [
+          "generic",
+          "domain"
+        ]
+      },
+      "Money": {
+        "type": "object",
+        "description": "A currency and a monetary amount in the currency's minor unit.",
+        "properties": {
+          "amount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "currency": {
+            "$ref": "#/components/schemas/Currency"
+          }
+        }
+      },
+      "Product": {
+        "type": "object",
+        "description": "A product object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "$ref": "#/components/schemas/ProductType"
+          },
+          "price": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "is_net": {
+            "type": "boolean"
+          },
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "quantity": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "archived_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "Domain": {
+        "type": "object",
+        "description": "A domain object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "tld": {
+            "type": "string"
+          },
+          "product": {
+            "$ref": "#/components/schemas/Product"
+          }
+        }
+      },
+      "Pagination": {
+        "type": "object",
+        "description": "Pagination metadata",
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "offset": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "description": "A error object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "required": [
+          "message",
+          "code"
+        ]
+      },
+      "ValidationErrorField": {
+        "type": "object",
+        "description": "A validation error field",
+        "properties": {
+          "field": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "ValidationErrorFields": {
+        "type": "object",
+        "description": "A map of validation error fields",
+        "additionalProperties": {
+          "$ref": "#/components/schemas/ValidationErrorField"
+        }
+      },
+      "ValidationError": {
+        "description": "A validation error object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Error"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "fields": {
+                "$ref": "#/components/schemas/ValidationErrorFields"
+              }
+            }
+          }
+        ]
+      },
+      "DomainUpdateBulkData": {
+        "type": "object",
+        "description": "Domain bulk update data",
+        "properties": {
+          "archived": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "price": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          },
+          "currency": {
+            "$ref": "#/components/schemas/Currency"
+          },
+          "is_net": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          }
+        }
+      },
+      "Int64Range": {
+        "type": "object",
+        "description": "A range of int64 values.",
+        "properties": {
+          "min": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "max": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "ProductPriceFilter": {
+        "description": "A filter for a product's price",
+        "oneOf": [
+          {
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "$ref": "#/components/schemas/Int64Range"
+          }
+        ]
+      },
+      "ProductFilter": {
+        "type": "object",
+        "description": "A collection of filters for products",
+        "properties": {
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "archived": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "price": {
+            "$ref": "#/components/schemas/ProductPriceFilter"
+          },
+          "currency": {
+            "$ref": "#/components/schemas/Currency"
+          }
+        }
+      },
+      "Int32Range": {
+        "type": "object",
+        "description": "A range of int32 values.",
+        "properties": {
+          "min": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32"
+          },
+          "max": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "DomainLengthFilter": {
+        "description": "A filter for a domain's length",
+        "oneOf": [
+          {
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "$ref": "#/components/schemas/Int32Range"
+          }
+        ]
+      },
+      "DomainFilter": {
+        "description": "A collection of filters for domains",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ProductFilter"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "length": {
+                "$ref": "#/components/schemas/DomainLengthFilter"
+              },
+              "state": {
+                "$ref": "#/components/schemas/DomainState"
+              },
+              "tld": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "DomainUpdateBulk": {
+        "allOf": [
+          {
+            "type": "object",
+            "properties": {
+              "data": {
+                "$ref": "#/components/schemas/DomainUpdateBulkData"
+              }
+            },
+            "required": [
+              "data"
+            ]
+          },
+          {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "filter": {
+                    "$ref": "#/components/schemas/DomainFilter"
+                  }
+                },
+                "required": [
+                  "filter"
+                ]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "ids": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": [
+                  "ids"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "DomainAuthCodeCreate": {
+        "type": "object",
+        "properties": {
+          "auth_code": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "order_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "auth_code",
+          "order_id"
+        ]
+      },
+      "DomainImportMode": {
+        "type": "string",
+        "description": "The mode of a domain import",
+        "enum": [
+          "add",
+          "add_update"
+        ]
+      },
+      "DomainImportSourceItem": {
+        "type": "object",
+        "description": "A domain import source item",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "is_net": {
+            "type": "boolean"
+          },
+          "price": {
+            "$ref": "#/components/schemas/Money"
+          }
+        },
+        "required": [
+          "name",
+          "price"
+        ]
+      },
+      "DomainImportSourceItems": {
+        "type": "object",
+        "description": "An object describing a domain import source with items",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "items"
+            ]
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DomainImportSourceItem"
+            }
+          }
+        },
+        "required": [
+          "type",
+          "items"
+        ]
+      },
+      "DomainImportSourceUpload": {
+        "type": "object",
+        "description": "An object describing a domain import source with an upload file reference",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "upload"
+            ]
+          },
+          "resource_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "resource_id"
+        ]
+      },
+      "DomainImportSourceSedo": {
+        "type": "object",
+        "description": "An object describing a domain import source with Sedo credentials",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "sedo"
+            ]
+          },
+          "credentials": {
+            "title": "DomainImportSourceSedoCredentials",
+            "type": "object",
+            "properties": {
+              "partner_id": {
+                "type": "string"
+              },
+              "sign_key": {
+                "type": "string"
+              },
+              "username": {
+                "type": "string"
+              },
+              "password": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "partner_id",
+              "sign_key",
+              "username",
+              "password"
+            ]
+          }
+        },
+        "required": [
+          "type",
+          "credentials"
+        ]
+      },
+      "DomainImportSource": {
+        "description": "A domain import source",
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/DomainImportSourceItems"
+          },
+          {
+            "$ref": "#/components/schemas/DomainImportSourceUpload"
+          },
+          {
+            "$ref": "#/components/schemas/DomainImportSourceSedo"
+          }
+        ],
+        "discriminator": {
+          "propertyName": "type",
+          "mapping": {
+            "items": "#/components/schemas/DomainImportSourceItems",
+            "upload": "#/components/schemas/DomainImportSourceUpload",
+            "sedo": "#/components/schemas/DomainImportSourceSedo"
+          }
+        }
+      },
+      "DomainImportCreate": {
+        "type": "object",
+        "properties": {
+          "auto_offer_products": {
+            "type": "boolean",
+            "default": false
+          },
+          "mode": {
+            "$ref": "#/components/schemas/DomainImportMode"
+          },
+          "source": {
+            "$ref": "#/components/schemas/DomainImportSource"
+          }
+        },
+        "required": [
+          "mode",
+          "source"
+        ]
+      },
+      "DomainImportSourceType": {
+        "type": "string",
+        "description": "The source type of a domain import",
+        "enum": [
+          "upload",
+          "sedo"
+        ]
+      },
+      "DomainImportState": {
+        "type": "string",
+        "description": "The state of a domain import",
+        "enum": [
+          "created",
+          "initializing",
+          "initialized",
+          "pending",
+          "processing",
+          "completed",
+          "failed"
+        ]
+      },
+      "DomainImport": {
+        "type": "object",
+        "description": "A domain import object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "mode": {
+            "$ref": "#/components/schemas/DomainImportMode"
+          },
+          "source": {
+            "$ref": "#/components/schemas/DomainImportSourceType"
+          },
+          "state": {
+            "$ref": "#/components/schemas/DomainImportState"
+          }
+        }
+      },
+      "DomainImportDiffItem": {
+        "type": "object",
+        "description": "A domain import diff item",
+        "properties": {
+          "new": {
+            "$ref": "#/components/schemas/DomainImportSourceItem"
+          },
+          "old": {
+            "$ref": "#/components/schemas/DomainImportSourceItem"
+          }
+        },
+        "required": [
+          "new"
+        ]
+      },
+      "DomainImportDiff": {
+        "type": "object",
+        "description": "A domain import diff",
+        "properties": {
+          "additions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DomainImportDiffItem"
+            }
+          },
+          "deletions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DomainImportDiffItem"
+            }
+          },
+          "updates": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DomainImportDiffItem"
+            }
+          }
+        }
+      },
+      "DomainImportStats": {
+        "type": "object",
+        "description": "A domain import stats object",
+        "properties": {
+          "additions": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "deletions": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "updates": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "Webhook": {
+        "type": "object",
+        "description": "A webhook object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "url": {
+            "type": "string"
+          },
+          "token": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "WebhookCreate": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "url": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "url"
+        ]
+      },
+      "WebhookUpdate": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "enabled": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          }
+        }
+      },
+      "DomainSalePending": {
+        "type": "object",
+        "properties": {
+          "domain": {
+            "$ref": "#/components/schemas/Domain"
+          }
+        },
+        "required": [
+          "domain"
+        ]
+      },
+      "DomainSaleCancelled": {
+        "type": "object",
+        "properties": {
+          "domain": {
+            "$ref": "#/components/schemas/Domain"
+          }
+        },
+        "required": [
+          "domain"
+        ]
+      },
+      "DomainSaleSucceeded": {
+        "type": "object",
+        "properties": {
+          "domain": {
+            "$ref": "#/components/schemas/Domain"
+          }
+        },
+        "required": [
+          "domain"
+        ]
+      },
+      "DomainSaleFailed": {
+        "type": "object",
+        "properties": {
+          "domain": {
+            "$ref": "#/components/schemas/Domain"
+          }
+        },
+        "required": [
+          "domain"
+        ]
+      }
+    },
+    "requestBodies": {
+      "DomainUpdateBulk": {
+        "description": "Domain bulk update input",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/DomainUpdateBulk"
+            }
+          }
+        }
+      },
+      "DomainAuthCodeCreate": {
+        "description": "Domain auth code input",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/DomainAuthCodeCreate"
+            }
+          }
+        }
+      },
+      "DomainImportCreate": {
+        "description": "Domain import input",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/DomainImportCreate"
+            }
+          }
+        }
+      },
+      "WebhookCreate": {
+        "description": "Webhook to create",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/WebhookCreate"
+            }
+          }
+        }
+      },
+      "WebhookUpdate": {
+        "description": "Webhook to update",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/WebhookUpdate"
+            }
+          }
+        }
+      },
+      "DomainSalePending": {
+        "description": "Event payload for when a domain sale is pending",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/DomainSalePending"
+            }
+          }
+        }
+      },
+      "DomainSaleCancelled": {
+        "description": "Event payload for when a domain sale was cancelled",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/DomainSaleCancelled"
+            }
+          }
+        }
+      },
+      "DomainSaleSucceeded": {
+        "description": "Event payload for when a domain sale succeeded",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/DomainSaleSucceeded"
+            }
+          }
+        }
+      },
+      "DomainSaleFailed": {
+        "description": "Event payload for when a domain sale failed",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/DomainSaleFailed"
+            }
+          }
+        }
+      }
+    }
+  }
+}
