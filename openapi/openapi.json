@@ -9,7 +9,7 @@
       "url": "https://fruits.co/contact",
       "email": "dev@fruits.co"
     },
-    "version": "0.0.3",
+    "version": "0.0.4",
     "license": {
       "name": "Apache 2.0",
       "url": "https://www.apache.org/licenses/LICENSE-2.0.html"
@@ -52,11 +52,27 @@
         ],
         "parameters": [
           {
+            "name": "name",
+            "description": "Filter domains by name",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "x-oapi-codegen-extra-tags": {
+              "form": "name",
+              "binding": "omitempty"
+            }
+          },
+          {
             "name": "archived",
             "description": "Filter domains by archived state",
             "in": "query",
             "schema": {
               "type": "boolean"
+            },
+            "x-oapi-codegen-extra-tags": {
+              "form": "archived",
+              "binding": "omitempty"
             }
           },
           {
@@ -65,6 +81,10 @@
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/Currency"
+            },
+            "x-oapi-codegen-extra-tags": {
+              "form": "currency",
+              "binding": "omitempty,oneof=eur usd gbp chf bgn czk dkk huf pln ron sek nok jpy cad aud sgd"
             }
           },
           {
@@ -81,7 +101,12 @@
             "in": "query",
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "minimum": 1
+            },
+            "x-oapi-codegen-extra-tags": {
+              "form": "length_min",
+              "binding": "omitempty,min=1"
             }
           },
           {
@@ -90,31 +115,19 @@
             "in": "query",
             "schema": {
               "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
-            "name": "limit",
-            "description": "Limit the domains count of the paginated result",
-            "in": "query",
-            "schema": {
-              "type": "integer",
               "format": "int32",
-              "default": 1000,
-              "maximum": 50000,
               "minimum": 1
+            },
+            "x-oapi-codegen-extra-tags": {
+              "form": "length_max",
+              "binding": "omitempty,min=1"
             }
           },
           {
-            "name": "offset",
-            "description": "Offset the domains of the paginated result",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32",
-              "default": 0,
-              "minimum": 0
-            }
+            "$ref": "#/components/parameters/PaginationLimit"
+          },
+          {
+            "$ref": "#/components/parameters/PaginationOffset"
           },
           {
             "name": "price_min",
@@ -122,7 +135,12 @@
             "in": "query",
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int64",
+              "minimum": 0
+            },
+            "x-oapi-codegen-extra-tags": {
+              "form": "price_min",
+              "binding": "omitempty,min=0"
             }
           },
           {
@@ -131,7 +149,12 @@
             "in": "query",
             "schema": {
               "type": "integer",
-              "format": "int64"
+              "format": "int64",
+              "minimum": 0
+            },
+            "x-oapi-codegen-extra-tags": {
+              "form": "price_max",
+              "binding": "omitempty,min=0"
             }
           },
           {
@@ -140,6 +163,22 @@
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/DomainState"
+            },
+            "x-oapi-codegen-extra-tags": {
+              "form": "state",
+              "binding": "omitempty,oneof=pending verifying verified unverified"
+            }
+          },
+          {
+            "name": "tld",
+            "description": "Filter domains by TLD",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "x-oapi-codegen-extra-tags": {
+              "form": "tld",
+              "binding": "omitempty"
             }
           }
         ],
@@ -157,8 +196,10 @@
             "$ref": "#/components/responses/ValidationErrorResponse"
           }
         }
-      },
-      "put": {
+      }
+    },
+    "/v1/domains/bulk": {
+      "patch": {
         "operationId": "DomainUpdateBulk",
         "summary": "Update domains",
         "description": "Update a list of domains through a filter.",
@@ -176,8 +217,37 @@
           "$ref": "#/components/requestBodies/DomainUpdateBulk"
         },
         "responses": {
-          "201": {
-            "description": "Domains updated"
+          "202": {
+            "description": "Update accepted"
+          },
+          "404": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationErrorResponse"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "DomainDeleteBulk",
+        "summary": "Delete domains",
+        "description": "Delete a list of domains through a filter.",
+        "tags": [
+          "domains"
+        ],
+        "security": [
+          {
+            "oauth2": [
+              "content.domain.write"
+            ]
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/DomainDeleteBulk"
+        },
+        "responses": {
+          "202": {
+            "description": "Deletion accepted"
           },
           "404": {
             "$ref": "#/components/responses/ErrorResponse"
@@ -217,6 +287,43 @@
         "responses": {
           "200": {
             "$ref": "#/components/responses/DomainGet"
+          },
+          "404": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationErrorResponse"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "DomainDelete",
+        "summary": "Delete domain",
+        "description": "Delete a domain.",
+        "tags": [
+          "domains"
+        ],
+        "security": [
+          {
+            "oauth2": [
+              "content.domain.write"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "idOrName",
+            "description": "The ID or name of the domain to delete",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Domain deleted"
           },
           "404": {
             "$ref": "#/components/responses/ErrorResponse"
@@ -329,6 +436,378 @@
         "responses": {
           "200": {
             "$ref": "#/components/responses/DomainImportGet"
+          },
+          "404": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationErrorResponse"
+          }
+        }
+      }
+    },
+    "/v1/negotiations": {
+      "get": {
+        "operationId": "NegotiationList",
+        "summary": "List negotiations",
+        "description": "List all negotiations in your account.",
+        "tags": [
+          "negotiations"
+        ],
+        "security": [
+          {
+            "oauth2": [
+              "content.negotiation.read"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PaginationLimit"
+          },
+          {
+            "$ref": "#/components/parameters/PaginationOffset"
+          },
+          {
+            "name": "query",
+            "description": "Filter negotiations by query",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "x-oapi-codegen-extra-tags": {
+              "form": "query"
+            }
+          },
+          {
+            "name": "status",
+            "description": "Filter negotiations by status",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/NegotiationFilterStatus"
+            },
+            "x-oapi-codegen-extra-tags": {
+              "form": "status",
+              "binding": "omitempty,oneof=active sold cancelled"
+            }
+          },
+          {
+            "name": "sort",
+            "description": "The name of the field to sort the negotiations by",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/NegotiationSort"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NegotiationList"
+          },
+          "404": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationErrorResponse"
+          }
+        }
+      }
+    },
+    "/v1/negotiations/{id}": {
+      "get": {
+        "operationId": "NegotiationGet",
+        "summary": "Get negotiation",
+        "description": "Get the details of a negotiation.",
+        "tags": [
+          "negotiations"
+        ],
+        "security": [
+          {
+            "oauth2": [
+              "content.negotiation.read"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "description": "The ID of the negotiation to retrieve",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NegotiationGetResponse"
+          },
+          "404": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        }
+      }
+    },
+    "/v1/negotiations/{id}/messages": {
+      "get": {
+        "operationId": "NegotiationMessages",
+        "summary": "List negotiation messages",
+        "description": "List all messages of a negotiation.",
+        "tags": [
+          "negotiations"
+        ],
+        "security": [
+          {
+            "oauth2": [
+              "content.negotiation.read"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "description": "The ID of the negotiation to retrieve messages for",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NegotiationMessagesResponse"
+          },
+          "404": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationErrorResponse"
+          }
+        }
+      }
+    },
+    "/v1/negotiations/{id}/messages/reply": {
+      "post": {
+        "operationId": "ReplyNegotiation",
+        "summary": "Reply to a negotiation",
+        "description": "Reply to a negotiation.",
+        "tags": [
+          "negotiations"
+        ],
+        "security": [
+          {
+            "oauth2": [
+              "content.negotiation.write"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "description": "The ID of the negotiation to reply to",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ReplyNegotiation"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/ReplyNegotiationResponse"
+          },
+          "404": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationErrorResponse"
+          }
+        }
+      }
+    },
+    "/v1/negotiations/{id}/receipts/me": {
+      "put": {
+        "summary": "Set caller's last-read message pointer",
+        "operationId": "NegotiationReadReceiptUpdate",
+        "description": "Update the receipt of a negotiation.",
+        "parameters": [
+          {
+            "name": "id",
+            "description": "The ID of the negotiation to update the receipt for",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "tags": [
+          "negotiations"
+        ],
+        "security": [
+          {
+            "oauth2": [
+              "content.negotiation.write"
+            ]
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/ReadReceiptUpdate"
+        },
+        "responses": {
+          "204": {
+            "description": "Read receipt updated"
+          },
+          "404": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationErrorResponse"
+          }
+        }
+      }
+    },
+    "/v1/negotiations/{id}/cancel": {
+      "post": {
+        "operationId": "CancelNegotiation",
+        "summary": "Cancel a negotiation",
+        "description": "Cancel a negotiation.",
+        "tags": [
+          "negotiations"
+        ],
+        "security": [
+          {
+            "oauth2": [
+              "content.negotiation.write"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "description": "The ID of the negotiation to cancel",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Negotiation cancelled"
+          },
+          "404": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationErrorResponse"
+          }
+        }
+      }
+    },
+    "/v1/orders/sales": {
+      "get": {
+        "operationId": "SaleList",
+        "summary": "List sales",
+        "description": "List all sales in your account.",
+        "tags": [
+          "orders"
+        ],
+        "security": [
+          {
+            "oauth2": [
+              "content.order.read"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PaginationLimit"
+          },
+          {
+            "$ref": "#/components/parameters/PaginationOffset"
+          },
+          {
+            "name": "sort",
+            "description": "The name of the field to sort the sales by",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/OrderSort"
+            }
+          },
+          {
+            "name": "product.name",
+            "description": "Filter sales by product name",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "x-oapi-codegen-extra-tags": {
+              "form": "product.name",
+              "binding": "omitempty"
+            }
+          },
+          {
+            "name": "state",
+            "description": "Filter sales by state",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/OrderState"
+            },
+            "x-oapi-codegen-extra-tags": {
+              "form": "state",
+              "binding": "omitempty"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/SaleList"
+          },
+          "404": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationErrorResponse"
+          }
+        }
+      }
+    },
+    "/v1/orders/sales/{idOrNumber}": {
+      "get": {
+        "operationId": "SaleGet",
+        "summary": "Get sale",
+        "description": "Get the details of a sale.",
+        "tags": [
+          "orders"
+        ],
+        "security": [
+          {
+            "oauth2": [
+              "content.order.read"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "idOrNumber",
+            "description": "The ID or order number of the sale to retrieve",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/SaleGet"
           },
           "404": {
             "$ref": "#/components/responses/ErrorResponse"
@@ -474,10 +953,10 @@
     }
   },
   "webhooks": {
-    "domainSalePending": {
+    "event": {
       "post": {
-        "summary": "Domain Sale Pending",
-        "operationId": "DomainSalePending",
+        "summary": "Event",
+        "operationId": "WebhookEvent",
         "tags": [
           "events"
         ],
@@ -487,7 +966,7 @@
           }
         ],
         "requestBody": {
-          "$ref": "#/components/requestBodies/DomainSalePending"
+          "$ref": "#/components/requestBodies/WebhookEvent"
         },
         "responses": {
           "200": {
@@ -496,10 +975,10 @@
         }
       }
     },
-    "domainSaleCancelled": {
+    "sale.pending": {
       "post": {
-        "summary": "Domain Sale Cancelled",
-        "operationId": "DomainSaleCancelled",
+        "summary": "Sale pending",
+        "operationId": "WebhookSalePendingEvent",
         "tags": [
           "events"
         ],
@@ -509,7 +988,14 @@
           }
         ],
         "requestBody": {
-          "$ref": "#/components/requestBodies/DomainSaleCancelled"
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SalePendingEvent"
+              }
+            }
+          }
         },
         "responses": {
           "200": {
@@ -518,10 +1004,10 @@
         }
       }
     },
-    "domainSaleSucceeded": {
+    "sale.succeeded": {
       "post": {
-        "summary": "Domain Sale Succeeded",
-        "operationId": "DomainSaleSucceeded",
+        "summary": "Sale succeeded",
+        "operationId": "WebhookSaleSucceededEvent",
         "tags": [
           "events"
         ],
@@ -531,7 +1017,14 @@
           }
         ],
         "requestBody": {
-          "$ref": "#/components/requestBodies/DomainSaleSucceeded"
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaleSucceededEvent"
+              }
+            }
+          }
         },
         "responses": {
           "200": {
@@ -540,10 +1033,10 @@
         }
       }
     },
-    "domainSaleFailed": {
+    "sale.failed": {
       "post": {
-        "summary": "Domain Sale Failed",
-        "operationId": "DomainSaleFailed",
+        "summary": "Sale failed",
+        "operationId": "WebhookSaleFailedEvent",
         "tags": [
           "events"
         ],
@@ -553,7 +1046,159 @@
           }
         ],
         "requestBody": {
-          "$ref": "#/components/requestBodies/DomainSaleFailed"
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaleFailedEvent"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/WebhookSuccess"
+          }
+        }
+      }
+    },
+    "sale.cancelled": {
+      "post": {
+        "summary": "Sale cancelled",
+        "operationId": "WebhookSaleCancelledEvent",
+        "tags": [
+          "events"
+        ],
+        "security": [
+          {
+            "signature": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaleCancelledEvent"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/WebhookSuccess"
+          }
+        }
+      }
+    },
+    "sale.requires_action": {
+      "post": {
+        "summary": "Sale requires action",
+        "operationId": "WebhookSaleRequiresActionEvent",
+        "tags": [
+          "events"
+        ],
+        "security": [
+          {
+            "signature": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaleRequiresActionEvent"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/WebhookSuccess"
+          }
+        }
+      }
+    },
+    "sale.leased": {
+      "post": {
+        "summary": "Sale leased",
+        "operationId": "WebhookSaleLeasedEvent",
+        "tags": [
+          "events"
+        ],
+        "security": [
+          {
+            "signature": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaleLeasedEvent"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/WebhookSuccess"
+          }
+        }
+      }
+    },
+    "negotiation.created": {
+      "post": {
+        "summary": "Negotiation created",
+        "operationId": "WebhookNegotiationCreatedEvent",
+        "tags": [
+          "events"
+        ],
+        "security": [
+          {
+            "signature": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NegotiationCreatedEvent"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/WebhookSuccess"
+          }
+        }
+      }
+    },
+    "negotiation.message.created": {
+      "post": {
+        "summary": "Negotiation message created",
+        "operationId": "WebhookNegotiationMessageCreatedEvent",
+        "tags": [
+          "events"
+        ],
+        "security": [
+          {
+            "signature": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NegotiationMessageCreatedEvent"
+              }
+            }
+          }
         },
         "responses": {
           "200": {
@@ -578,16 +1223,19 @@
             "authorizationUrl": "https://api.fruits.co/oauth2/authorize",
             "tokenUrl": "https://api.fruits.co/oauth2/token",
             "scopes": {
-              "content:domain:read": "Read access to domains",
-              "content:domain:write": "Write access to domains",
-              "account:admin:read": "Read access to account",
-              "account:admin:write": "Write access to account"
+              "content.domain.read": "Read access to domains",
+              "content.domain.write": "Write access to domains",
+              "account.admin.read": "Read access to account",
+              "account.admin.write": "Write access to account",
+              "content.order.read": "Read access to orders",
+              "content.negotiation.read": "Read access to negotiations",
+              "content.negotiation.write": "Write access to negotiations"
             }
           },
           "clientCredentials": {
             "tokenUrl": "https://api.fruits.co/oauth2/token",
             "scopes": {
-              "platform:account:create": "Write access to accounts"
+              "platform.account.create": "Write access to accounts"
             }
           }
         }
@@ -614,10 +1262,15 @@
                 "pagination": {
                   "$ref": "#/components/schemas/Pagination"
                 }
-              }
+              },
+              "required": [
+                "items",
+                "pagination"
+              ]
             }
           }
-        }
+        },
+        "x-go-name": "DomainListResponse"
       },
       "ErrorResponse": {
         "description": "Error Response",
@@ -647,7 +1300,8 @@
               "$ref": "#/components/schemas/Domain"
             }
           }
-        }
+        },
+        "x-go-name": "DomainGetResponse"
       },
       "DomainImportCreate": {
         "description": "Domain import created",
@@ -672,7 +1326,8 @@
               ]
             }
           }
-        }
+        },
+        "x-go-name": "DomainImportCreateResponse"
       },
       "DomainImportGet": {
         "description": "Domain import details",
@@ -697,6 +1352,116 @@
               ]
             }
           }
+        },
+        "x-go-name": "DomainImportGetResponse"
+      },
+      "NegotiationList": {
+        "description": "List of negotiations",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Negotiation"
+                  }
+                },
+                "pagination": {
+                  "$ref": "#/components/schemas/Pagination"
+                }
+              },
+              "required": [
+                "items",
+                "pagination"
+              ]
+            }
+          }
+        }
+      },
+      "NegotiationGetResponse": {
+        "description": "Get a negotiation",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Negotiation"
+            }
+          }
+        }
+      },
+      "NegotiationMessagesResponse": {
+        "description": "List of negotiation messages",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/NegotiationMessage"
+                  }
+                }
+              },
+              "required": [
+                "items"
+              ]
+            }
+          }
+        }
+      },
+      "ReplyNegotiationResponse": {
+        "description": "Response for replying to a negotiation",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "$ref": "#/components/schemas/NegotiationMessage"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        }
+      },
+      "SaleList": {
+        "description": "List of sales",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Sale"
+                  }
+                },
+                "pagination": {
+                  "$ref": "#/components/schemas/Pagination"
+                }
+              },
+              "required": [
+                "items",
+                "pagination"
+              ]
+            }
+          }
+        }
+      },
+      "SaleGet": {
+        "description": "Get a sale",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Sale"
+            }
+          }
         }
       },
       "WebhookList": {
@@ -716,10 +1481,15 @@
                 "pagination": {
                   "$ref": "#/components/schemas/Pagination"
                 }
-              }
+              },
+              "required": [
+                "items",
+                "pagination"
+              ]
             }
           }
-        }
+        },
+        "x-go-name": "WebhookListResponse"
       },
       "WebhookCreate": {
         "description": "Webhook created",
@@ -729,7 +1499,8 @@
               "$ref": "#/components/schemas/Webhook"
             }
           }
-        }
+        },
+        "x-go-name": "WebhookCreateResponse"
       }
     },
     "schemas": {
@@ -737,19 +1508,59 @@
         "type": "string",
         "description": "ISO 4217 currency code",
         "enum": [
-          "EUR",
-          "USD",
-          "GBP",
-          "CHF"
+          "eur",
+          "usd",
+          "gbp",
+          "chf",
+          "bgn",
+          "czk",
+          "dkk",
+          "huf",
+          "pln",
+          "ron",
+          "sek",
+          "nok",
+          "jpy",
+          "cad",
+          "aud",
+          "sgd"
+        ],
+        "x-enum-varnames": [
+          "CURRENCY_EUR",
+          "CURRENCY_USD",
+          "CURRENCY_GBP",
+          "CURRENCY_CHF",
+          "CURRENCY_BGN",
+          "CURRENCY_CZK",
+          "CURRENCY_DKK",
+          "CURRENCY_HUF",
+          "CURRENCY_PLN",
+          "CURRENCY_RON",
+          "CURRENCY_SEK",
+          "CURRENCY_NOK",
+          "CURRENCY_JPY",
+          "CURRENCY_CAD",
+          "CURRENCY_AUD",
+          "CURRENCY_SGD"
         ]
       },
       "SortOrder": {
         "type": "string",
         "description": "Sort order direction",
+        "default": "asc",
         "enum": [
           "asc",
           "desc"
-        ]
+        ],
+        "x-enum-varnames": [
+          "ORDER_ASC",
+          "ORDER_DESC"
+        ],
+        "x-oapi-codegen-extra-tags": {
+          "form": "order",
+          "binding": "omitempty,oneof=asc desc",
+          "default": "asc"
+        }
       },
       "DomainSort": {
         "type": "object",
@@ -757,11 +1568,22 @@
         "properties": {
           "field": {
             "type": "string",
+            "default": "created_at",
             "enum": [
               "name",
-              "price.amount",
+              "price",
               "created_at"
-            ]
+            ],
+            "x-enum-varnames": [
+              "DOMAIN_SORT_NAME",
+              "DOMAIN_SORT_PRICE",
+              "DOMAIN_SORT_CREATED_AT"
+            ],
+            "x-oapi-codegen-extra-tags": {
+              "form": "field",
+              "binding": "omitempty,oneof=name price created_at",
+              "default": "created_at"
+            }
           },
           "order": {
             "$ref": "#/components/schemas/SortOrder"
@@ -776,6 +1598,12 @@
           "verifying",
           "verified",
           "unverified"
+        ],
+        "x-enum-varnames": [
+          "DOMAIN_STATE_PENDING",
+          "DOMAIN_STATE_VERIFYING",
+          "DOMAIN_STATE_VERIFIED",
+          "DOMAIN_STATE_UNVERIFIED"
         ]
       },
       "ProductType": {
@@ -784,6 +1612,10 @@
         "enum": [
           "generic",
           "domain"
+        ],
+        "x-enum-varnames": [
+          "PRODUCT_TYPE_GENERIC",
+          "PRODUCT_TYPE_DOMAIN"
         ]
       },
       "Money": {
@@ -792,15 +1624,39 @@
         "properties": {
           "amount": {
             "type": "integer",
-            "format": "int64"
+            "format": "int64",
+            "x-oapi-codegen-extra-tags": {
+              "form": "amount",
+              "binding": "required,min=0"
+            }
           },
           "currency": {
-            "$ref": "#/components/schemas/Currency"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Currency"
+              }
+            ],
+            "x-oapi-codegen-extra-tags": {
+              "form": "currency",
+              "binding": "required,oneof=eur usd gbp chf bgn czk dkk huf pln ron sek nok jpy cad aud sgd"
+            }
+          },
+          "object": {
+            "type": "string",
+            "enum": [
+              "money"
+            ]
           }
-        }
+        },
+        "required": [
+          "amount",
+          "currency",
+          "object"
+        ]
       },
       "Product": {
         "type": "object",
+        "title": "Product",
         "description": "A product object",
         "properties": {
           "id": {
@@ -848,11 +1704,63 @@
               "null"
             ],
             "format": "date-time"
+          },
+          "negotiation_enabled": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "negotiation_messages_enabled": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "negotiation_minimum_offer_amount": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          },
+          "lto_enabled": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "lto_maximum_instalments": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32"
+          },
+          "object": {
+            "type": "string",
+            "enum": [
+              "product"
+            ]
           }
-        }
+        },
+        "required": [
+          "id",
+          "slug",
+          "name",
+          "type",
+          "price",
+          "is_net",
+          "quantity",
+          "enabled",
+          "created_at",
+          "updated_at",
+          "object"
+        ]
       },
       "Domain": {
         "type": "object",
+        "title": "Domain",
         "description": "A domain object",
         "properties": {
           "id": {
@@ -864,10 +1772,28 @@
           "tld": {
             "type": "string"
           },
+          "length": {
+            "type": "integer",
+            "format": "int32"
+          },
           "product": {
             "$ref": "#/components/schemas/Product"
+          },
+          "object": {
+            "type": "string",
+            "enum": [
+              "domain"
+            ]
           }
-        }
+        },
+        "required": [
+          "id",
+          "name",
+          "tld",
+          "length",
+          "product",
+          "object"
+        ]
       },
       "Pagination": {
         "type": "object",
@@ -885,7 +1811,12 @@
             "type": "integer",
             "format": "int32"
           }
-        }
+        },
+        "required": [
+          "limit",
+          "offset",
+          "total"
+        ]
       },
       "Error": {
         "type": "object",
@@ -914,7 +1845,11 @@
           "message": {
             "type": "string"
           }
-        }
+        },
+        "required": [
+          "field",
+          "message"
+        ]
       },
       "ValidationErrorFields": {
         "type": "object",
@@ -939,45 +1874,25 @@
           }
         ]
       },
-      "DomainUpdateBulkData": {
-        "type": "object",
-        "description": "Domain bulk update data",
-        "properties": {
-          "archived": {
-            "type": [
-              "boolean",
-              "null"
-            ]
-          },
-          "price": {
-            "type": [
-              "integer",
-              "null"
-            ],
-            "format": "int64"
-          },
-          "currency": {
-            "$ref": "#/components/schemas/Currency"
-          },
-          "is_net": {
-            "type": [
-              "boolean",
-              "null"
-            ]
-          }
-        }
-      },
       "Int64Range": {
         "type": "object",
         "description": "A range of int64 values.",
         "properties": {
           "min": {
             "type": "integer",
-            "format": "int64"
+            "format": "int64",
+            "x-oapi-codegen-extra-tags": {
+              "form": "min",
+              "binding": "omitempty"
+            }
           },
           "max": {
             "type": "integer",
-            "format": "int64"
+            "format": "int64",
+            "x-oapi-codegen-extra-tags": {
+              "form": "max",
+              "binding": "omitempty"
+            }
           }
         }
       },
@@ -985,11 +1900,19 @@
         "description": "A filter for a product's price",
         "oneOf": [
           {
+            "title": "ProductPriceFilterEqual",
             "type": "integer",
-            "format": "int64"
+            "format": "int64",
+            "x-go-type-name": "ProductPriceFilterEqual"
           },
           {
-            "$ref": "#/components/schemas/Int64Range"
+            "title": "ProductPriceFilterRange",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Int64Range"
+              }
+            ],
+            "x-go-type-name": "ProductPriceFilterRange"
           }
         ]
       },
@@ -1001,19 +1924,43 @@
             "type": [
               "string",
               "null"
-            ]
+            ],
+            "x-oapi-codegen-extra-tags": {
+              "form": "name",
+              "binding": "omitempty"
+            }
           },
           "archived": {
             "type": [
               "boolean",
               "null"
-            ]
+            ],
+            "x-oapi-codegen-extra-tags": {
+              "form": "archived",
+              "binding": "omitempty"
+            }
           },
           "price": {
-            "$ref": "#/components/schemas/ProductPriceFilter"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ProductPriceFilter"
+              }
+            ],
+            "x-oapi-codegen-extra-tags": {
+              "form": "price",
+              "binding": "omitempty"
+            }
           },
           "currency": {
-            "$ref": "#/components/schemas/Currency"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Currency"
+              }
+            ],
+            "x-oapi-codegen-extra-tags": {
+              "form": "currency",
+              "binding": "omitempty,oneof=eur usd gbp chf bgn czk dkk huf pln ron sek nok jpy cad aud sgd"
+            }
           }
         }
       },
@@ -1026,14 +1973,22 @@
               "integer",
               "null"
             ],
-            "format": "int32"
+            "format": "int32",
+            "x-oapi-codegen-extra-tags": {
+              "form": "min",
+              "binding": "omitempty"
+            }
           },
           "max": {
             "type": [
               "integer",
               "null"
             ],
-            "format": "int32"
+            "format": "int32",
+            "x-oapi-codegen-extra-tags": {
+              "form": "max",
+              "binding": "omitempty"
+            }
           }
         }
       },
@@ -1041,11 +1996,19 @@
         "description": "A filter for a domain's length",
         "oneOf": [
           {
+            "title": "DomainLengthFilterEqual",
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "x-go-type-name": "DomainLengthFilterEqual"
           },
           {
-            "$ref": "#/components/schemas/Int32Range"
+            "title": "DomainLengthFilterRange",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Int32Range"
+              }
+            ],
+            "x-go-type-name": "DomainLengthFilterRange"
           }
         ]
       },
@@ -1059,20 +2022,187 @@
             "type": "object",
             "properties": {
               "length": {
-                "$ref": "#/components/schemas/DomainLengthFilter"
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/DomainLengthFilter"
+                  }
+                ],
+                "x-oapi-codegen-extra-tags": {
+                  "form": "length",
+                  "binding": "omitempty"
+                }
               },
               "state": {
-                "$ref": "#/components/schemas/DomainState"
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/DomainState"
+                  }
+                ],
+                "x-oapi-codegen-extra-tags": {
+                  "form": "state",
+                  "binding": "omitempty"
+                }
               },
               "tld": {
                 "type": "array",
                 "items": {
                   "type": "string"
-                }
+                },
+                "x-oapi-codegen-extra-tags": {
+                  "form": "tld",
+                  "binding": "omitempty"
+                },
+                "x-go-type-skip-optional-pointer": true
               }
             }
           }
         ]
+      },
+      "DomainBulkFilter": {
+        "oneOf": [
+          {
+            "title": "DomainFilter",
+            "description": "Domain bulk filter",
+            "type": "object",
+            "properties": {
+              "filter": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/DomainFilter"
+                  }
+                ],
+                "x-oapi-codegen-extra-tags": {
+                  "form": "filter",
+                  "binding": "required"
+                }
+              }
+            },
+            "required": [
+              "filter"
+            ]
+          },
+          {
+            "title": "DomainBulkIds",
+            "description": "Domain bulk IDs",
+            "type": "object",
+            "properties": {
+              "ids": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "x-oapi-codegen-extra-tags": {
+                  "form": "ids",
+                  "binding": "required"
+                }
+              }
+            },
+            "required": [
+              "ids"
+            ],
+            "x-go-type-name": "DomainBulkIds"
+          }
+        ]
+      },
+      "DomainUpdateData": {
+        "type": "object",
+        "description": "Domain update data",
+        "properties": {
+          "archived": {
+            "type": [
+              "boolean",
+              "null"
+            ],
+            "x-oapi-codegen-extra-tags": {
+              "form": "archived",
+              "binding": "omitempty"
+            }
+          },
+          "price": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "x-oapi-codegen-extra-tags": {
+              "form": "price",
+              "binding": "required_with=Currency,omitempty"
+            }
+          },
+          "currency": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Currency"
+              }
+            ],
+            "x-oapi-codegen-extra-tags": {
+              "form": "currency",
+              "binding": "required_with=Price,omitempty,oneof=eur usd gbp chf bgn czk dkk huf pln ron sek nok jpy cad aud sgd"
+            }
+          },
+          "is_net": {
+            "type": [
+              "boolean",
+              "null"
+            ],
+            "x-oapi-codegen-extra-tags": {
+              "form": "is_net",
+              "binding": "omitempty"
+            }
+          },
+          "negotiation_enabled": {
+            "type": [
+              "boolean",
+              "null"
+            ],
+            "x-oapi-codegen-extra-tags": {
+              "form": "negotiation_enabled",
+              "binding": "omitempty"
+            }
+          },
+          "negotiation_messages_enabled": {
+            "type": [
+              "boolean",
+              "null"
+            ],
+            "x-oapi-codegen-extra-tags": {
+              "form": "negotiation_messages_enabled",
+              "binding": "omitempty"
+            }
+          },
+          "negotiation_minimum_offer_amount": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "x-oapi-codegen-extra-tags": {
+              "form": "negotiation_minimum_offer_amount",
+              "binding": "omitempty"
+            }
+          },
+          "lto_enabled": {
+            "type": [
+              "boolean",
+              "null"
+            ],
+            "x-oapi-codegen-extra-tags": {
+              "form": "lto_enabled",
+              "binding": "omitempty"
+            }
+          },
+          "lto_maximum_instalments": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32",
+            "x-oapi-codegen-extra-tags": {
+              "form": "lto_maximum_instalments",
+              "binding": "omitempty"
+            }
+          }
+        }
       },
       "DomainUpdateBulk": {
         "allOf": [
@@ -1080,7 +2210,15 @@
             "type": "object",
             "properties": {
               "data": {
-                "$ref": "#/components/schemas/DomainUpdateBulkData"
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/DomainUpdateData"
+                  }
+                ],
+                "x-oapi-codegen-extra-tags": {
+                  "form": "data",
+                  "binding": "required"
+                }
               }
             },
             "required": [
@@ -1088,33 +2226,7 @@
             ]
           },
           {
-            "oneOf": [
-              {
-                "type": "object",
-                "properties": {
-                  "filter": {
-                    "$ref": "#/components/schemas/DomainFilter"
-                  }
-                },
-                "required": [
-                  "filter"
-                ]
-              },
-              {
-                "type": "object",
-                "properties": {
-                  "ids": {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    }
-                  }
-                },
-                "required": [
-                  "ids"
-                ]
-              }
-            ]
+            "$ref": "#/components/schemas/DomainBulkFilter"
           }
         ]
       },
@@ -1124,10 +2236,18 @@
           "auth_code": {
             "type": "string",
             "minLength": 1,
-            "maxLength": 128
+            "maxLength": 256,
+            "x-oapi-codegen-extra-tags": {
+              "form": "auth_code",
+              "binding": "required"
+            }
           },
           "order_id": {
-            "type": "string"
+            "type": "string",
+            "x-oapi-codegen-extra-tags": {
+              "form": "order_id",
+              "binding": "required"
+            }
           }
         },
         "required": [
@@ -1138,9 +2258,16 @@
       "DomainImportMode": {
         "type": "string",
         "description": "The mode of a domain import",
+        "default": "add",
         "enum": [
           "add",
-          "add_update"
+          "add_update",
+          "add_update_delete"
+        ],
+        "x-enum-varnames": [
+          "IMPORT_MODE_ADD",
+          "IMPORT_MODE_ADD_UPDATE",
+          "IMPORT_MODE_ADD_UPDATE_DELETE"
         ]
       },
       "DomainImportSourceItem": {
@@ -1148,18 +2275,43 @@
         "description": "A domain import source item",
         "properties": {
           "name": {
-            "type": "string"
+            "type": "string",
+            "x-oapi-codegen-extra-tags": {
+              "form": "name",
+              "binding": "required"
+            }
           },
           "is_net": {
-            "type": "boolean"
+            "type": "boolean",
+            "x-oapi-codegen-extra-tags": {
+              "form": "is_net",
+              "binding": "omitempty"
+            }
           },
           "price": {
-            "$ref": "#/components/schemas/Money"
+            "type": "integer",
+            "format": "int64",
+            "x-oapi-codegen-extra-tags": {
+              "form": "price",
+              "binding": "required"
+            }
+          },
+          "currency": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Currency"
+              }
+            ],
+            "x-oapi-codegen-extra-tags": {
+              "form": "currency",
+              "binding": "required,oneof=eur usd gbp chf bgn czk dkk huf pln ron sek nok jpy cad aud sgd"
+            }
           }
         },
         "required": [
           "name",
-          "price"
+          "price",
+          "currency"
         ]
       },
       "DomainImportSourceItems": {
@@ -1176,6 +2328,10 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/DomainImportSourceItem"
+            },
+            "x-oapi-codegen-extra-tags": {
+              "form": "items",
+              "binding": "required,max=20000"
             }
           }
         },
@@ -1195,7 +2351,11 @@
             ]
           },
           "resource_id": {
-            "type": "string"
+            "type": "string",
+            "x-oapi-codegen-extra-tags": {
+              "form": "resource_id",
+              "binding": "required"
+            }
           }
         },
         "required": [
@@ -1218,16 +2378,33 @@
             "type": "object",
             "properties": {
               "partner_id": {
-                "type": "string"
+                "type": "integer",
+                "format": "int32",
+                "x-oapi-codegen-extra-tags": {
+                  "form": "partner_id",
+                  "binding": "required"
+                }
               },
               "sign_key": {
-                "type": "string"
+                "type": "string",
+                "x-oapi-codegen-extra-tags": {
+                  "form": "sign_key",
+                  "binding": "required"
+                }
               },
               "username": {
-                "type": "string"
+                "type": "string",
+                "x-oapi-codegen-extra-tags": {
+                  "form": "username",
+                  "binding": "required"
+                }
               },
               "password": {
-                "type": "string"
+                "type": "string",
+                "x-oapi-codegen-extra-tags": {
+                  "form": "password",
+                  "binding": "required"
+                }
               }
             },
             "required": [
@@ -1235,7 +2412,11 @@
               "sign_key",
               "username",
               "password"
-            ]
+            ],
+            "x-oapi-codegen-extra-tags": {
+              "form": "credentials",
+              "binding": "required"
+            }
           }
         },
         "required": [
@@ -1270,13 +2451,34 @@
         "properties": {
           "auto_offer_products": {
             "type": "boolean",
-            "default": false
+            "default": false,
+            "x-oapi-codegen-extra-tags": {
+              "form": "auto_offer_products",
+              "binding": "omitempty"
+            }
           },
           "mode": {
-            "$ref": "#/components/schemas/DomainImportMode"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DomainImportMode"
+              }
+            ],
+            "x-oapi-codegen-extra-tags": {
+              "form": "mode",
+              "binding": "omitempty,oneof=add add_update add_update_delete",
+              "default": "add"
+            }
           },
           "source": {
-            "$ref": "#/components/schemas/DomainImportSource"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DomainImportSource"
+              }
+            ],
+            "x-oapi-codegen-extra-tags": {
+              "form": "source",
+              "binding": "required"
+            }
           }
         },
         "required": [
@@ -1290,6 +2492,10 @@
         "enum": [
           "upload",
           "sedo"
+        ],
+        "x-enum-varnames": [
+          "IMPORT_SOURCE_UPLOAD",
+          "IMPORT_SOURCE_SEDO"
         ]
       },
       "DomainImportState": {
@@ -1303,6 +2509,15 @@
           "processing",
           "completed",
           "failed"
+        ],
+        "x-enum-varnames": [
+          "IMPORT_STATE_CREATED",
+          "IMPORT_STATE_INITIALIZING",
+          "IMPORT_STATE_INITIALIZED",
+          "IMPORT_STATE_PENDING",
+          "IMPORT_STATE_PROCESSING",
+          "IMPORT_STATE_COMPLETED",
+          "IMPORT_STATE_FAILED"
         ]
       },
       "DomainImport": {
@@ -1325,7 +2540,14 @@
           "state": {
             "$ref": "#/components/schemas/DomainImportState"
           }
-        }
+        },
+        "required": [
+          "id",
+          "created_at",
+          "mode",
+          "source",
+          "state"
+        ]
       },
       "DomainImportDiffItem": {
         "type": "object",
@@ -1337,10 +2559,7 @@
           "old": {
             "$ref": "#/components/schemas/DomainImportSourceItem"
           }
-        },
-        "required": [
-          "new"
-        ]
+        }
       },
       "DomainImportDiff": {
         "type": "object",
@@ -1364,7 +2583,12 @@
               "$ref": "#/components/schemas/DomainImportDiffItem"
             }
           }
-        }
+        },
+        "required": [
+          "additions",
+          "deletions",
+          "updates"
+        ]
       },
       "DomainImportStats": {
         "type": "object",
@@ -1382,7 +2606,824 @@
             "type": "integer",
             "format": "int32"
           }
+        },
+        "required": [
+          "additions",
+          "deletions",
+          "updates"
+        ]
+      },
+      "NegotiationFilterStatus": {
+        "type": "string",
+        "enum": [
+          "active",
+          "sold",
+          "cancelled"
+        ],
+        "x-enum-varnames": [
+          "NEGOTIATION_FILTER_STATUS_ACTIVE",
+          "NEGOTIATION_FILTER_STATUS_SOLD",
+          "NEGOTIATION_FILTER_STATUS_CANCELLED"
+        ]
+      },
+      "NegotiationSortFieldName": {
+        "type": "string",
+        "enum": [
+          "product.name",
+          "product.price.amount",
+          "latest_offer.price.amount",
+          "latest_activity_at"
+        ],
+        "x-enum-varnames": [
+          "NEGOTIATION_SORT_FIELD_NAME_PRODUCT_NAME",
+          "NEGOTIATION_SORT_FIELD_NAME_PRODUCT_PRICE_AMOUNT",
+          "NEGOTIATION_SORT_FIELD_NAME_LATEST_OFFER_PRICE_AMOUNT",
+          "NEGOTIATION_SORT_FIELD_NAME_LATEST_ACTIVITY_AT"
+        ]
+      },
+      "NegotiationSort": {
+        "type": "object",
+        "properties": {
+          "field": {
+            "$ref": "#/components/schemas/NegotiationSortFieldName"
+          },
+          "order": {
+            "$ref": "#/components/schemas/SortOrder"
+          }
         }
+      },
+      "NegotiationActorRole": {
+        "type": "string",
+        "enum": [
+          "merchant",
+          "suggester",
+          "system"
+        ],
+        "x-enum-varnames": [
+          "NEGOTIATION_ACTOR_ROLE_MERCHANT",
+          "NEGOTIATION_ACTOR_ROLE_SUGGESTER",
+          "NEGOTIATION_ACTOR_ROLE_SYSTEM"
+        ]
+      },
+      "NegotiationActor": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "$ref": "#/components/schemas/NegotiationActorRole"
+          }
+        },
+        "required": [
+          "role"
+        ]
+      },
+      "NegotiationOfferStatus": {
+        "type": "string",
+        "enum": [
+          "pending",
+          "accepted",
+          "rejected"
+        ],
+        "x-enum-varnames": [
+          "NEGOTIATION_OFFER_STATUS_PENDING",
+          "NEGOTIATION_OFFER_STATUS_ACCEPTED",
+          "NEGOTIATION_OFFER_STATUS_REJECTED"
+        ]
+      },
+      "NegotiationOffer": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "actor": {
+            "$ref": "#/components/schemas/NegotiationActor"
+          },
+          "price": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "status": {
+            "$ref": "#/components/schemas/NegotiationOfferStatus"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "replied_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "actor",
+          "price",
+          "status",
+          "created_at"
+        ]
+      },
+      "Suggester": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "language": {
+            "type": "string"
+          },
+          "country_code": {
+            "type": "string"
+          },
+          "phone_number": {
+            "type": "string"
+          },
+          "verified": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "email",
+          "verified"
+        ]
+      },
+      "Negotiation": {
+        "type": "object",
+        "title": "Negotiation",
+        "description": "Negotiation for a product",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "latest_offer": {
+            "$ref": "#/components/schemas/NegotiationOffer"
+          },
+          "accepted_offer": {
+            "$ref": "#/components/schemas/NegotiationOffer"
+          },
+          "offers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NegotiationOffer"
+            },
+            "x-go-type-skip-optional-pointer": true
+          },
+          "product": {
+            "$ref": "#/components/schemas/Product"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "cancelled_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "suggester": {
+            "$ref": "#/components/schemas/Suggester"
+          },
+          "currency": {
+            "$ref": "#/components/schemas/Currency"
+          },
+          "object": {
+            "type": "string",
+            "enum": [
+              "negotiation"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "latest_offer",
+          "offers",
+          "product",
+          "created_at",
+          "updated_at",
+          "currency",
+          "object",
+          "suggester"
+        ]
+      },
+      "NegotiationMessageType": {
+        "type": "string",
+        "enum": [
+          "text",
+          "offer",
+          "system"
+        ],
+        "x-enum-varnames": [
+          "NEGOTIATION_MESSAGE_TYPE_TEXT",
+          "NEGOTIATION_MESSAGE_TYPE_OFFER",
+          "NEGOTIATION_MESSAGE_TYPE_SYSTEM"
+        ]
+      },
+      "NegotiationMessageBase": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "negotiation_id": {
+            "type": "string"
+          },
+          "actor": {
+            "$ref": "#/components/schemas/NegotiationActor"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "type": {
+            "$ref": "#/components/schemas/NegotiationMessageType"
+          }
+        },
+        "discriminator": {
+          "propertyName": "type"
+        },
+        "required": [
+          "id",
+          "actor",
+          "created_at",
+          "type",
+          "negotiation_id"
+        ]
+      },
+      "NegotiationTextMessage": {
+        "title": "NegotiationTextMessage",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/NegotiationMessageBase"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "text": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "text"
+            ]
+          }
+        ]
+      },
+      "NegotiationOfferMessage": {
+        "title": "NegotiationOfferMessage",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/NegotiationMessageBase"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "text": {
+                "type": "string"
+              },
+              "offer": {
+                "$ref": "#/components/schemas/NegotiationOffer"
+              }
+            },
+            "required": [
+              "offer"
+            ]
+          }
+        ]
+      },
+      "NegotiationSystemMessageType": {
+        "type": "string",
+        "enum": [
+          "negotiation.canceled"
+        ],
+        "x-enum-varnames": [
+          "NEGOTIATION_SYSTEM_MESSAGE_TYPE_CANCELLED"
+        ]
+      },
+      "NegotiationSystemMessage": {
+        "title": "NegotiationSystemMessage",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/NegotiationMessageBase"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "system_type": {
+                "$ref": "#/components/schemas/NegotiationSystemMessageType"
+              }
+            },
+            "required": [
+              "system_type"
+            ]
+          }
+        ]
+      },
+      "NegotiationMessage": {
+        "title": "NegotiationMessage",
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/NegotiationTextMessage"
+          },
+          {
+            "$ref": "#/components/schemas/NegotiationOfferMessage"
+          },
+          {
+            "$ref": "#/components/schemas/NegotiationSystemMessage"
+          }
+        ],
+        "discriminator": {
+          "propertyName": "type",
+          "mapping": {
+            "text": "#/components/schemas/NegotiationTextMessage",
+            "offer": "#/components/schemas/NegotiationOfferMessage",
+            "system": "#/components/schemas/NegotiationSystemMessage"
+          }
+        }
+      },
+      "ReplyNegotiationAccepted": {
+        "title": "ReplyNegotiationAccepted",
+        "type": "object",
+        "properties": {
+          "offer_id": {
+            "type": "string"
+          },
+          "accepted": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "offer_id",
+          "accepted"
+        ]
+      },
+      "ReplyNegotiationPrice": {
+        "title": "ReplyNegotiationPrice",
+        "type": "object",
+        "properties": {
+          "offer_id": {
+            "type": "string"
+          },
+          "price": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "offer_id",
+          "price"
+        ]
+      },
+      "ReadReceipt": {
+        "type": "object",
+        "properties": {
+          "last_read_message_id": {
+            "type": "string"
+          },
+          "read_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Optional client timestamp; server may override"
+          }
+        },
+        "required": [
+          "last_read_message_id"
+        ]
+      },
+      "OrderSortFieldName": {
+        "type": "string",
+        "enum": [
+          "price.amount",
+          "created_at"
+        ],
+        "x-enum-varnames": [
+          "ORDER_SORT_FIELD_NAME_PRICE_AMOUNT",
+          "ORDER_SORT_FIELD_NAME_CREATED_AT"
+        ]
+      },
+      "OrderSort": {
+        "type": "object",
+        "properties": {
+          "field": {
+            "$ref": "#/components/schemas/OrderSortFieldName"
+          },
+          "order": {
+            "$ref": "#/components/schemas/SortOrder"
+          }
+        }
+      },
+      "OrderState": {
+        "type": "string",
+        "enum": [
+          "requires_payment",
+          "succeeded",
+          "cancelled",
+          "failed",
+          "pending",
+          "leased",
+          "requires_action",
+          "processing"
+        ],
+        "x-enum-varnames": [
+          "ORDER_STATE_REQUIRES_PAYMENT",
+          "ORDER_STATE_SUCCEEDED",
+          "ORDER_STATE_CANCELLED",
+          "ORDER_STATE_FAILED",
+          "ORDER_STATE_PENDING",
+          "ORDER_STATE_LEASED",
+          "ORDER_STATE_REQUIRES_ACTION",
+          "ORDER_STATE_PROCESSING"
+        ]
+      },
+      "Tax": {
+        "type": "object",
+        "description": "A breakdown of the tax of an entity.",
+        "properties": {
+          "amount": {
+            "$ref": "#/components/schemas/Money",
+            "description": "The amount of the tax."
+          },
+          "rate": {
+            "type": "number",
+            "format": "double",
+            "description": "The rate of the tax."
+          },
+          "reverse_charge": {
+            "type": "boolean",
+            "description": "Whether the tax is a reverse charge."
+          }
+        },
+        "required": [
+          "amount",
+          "rate",
+          "reverse_charge"
+        ]
+      },
+      "Fee": {
+        "type": "object",
+        "description": "A breakdown of a fee of an entity.",
+        "properties": {
+          "amount_fixed": {
+            "$ref": "#/components/schemas/Money",
+            "description": "The fixed amount of the fee."
+          },
+          "amount_variable": {
+            "$ref": "#/components/schemas/Money",
+            "description": "The variable amount of the fee."
+          },
+          "rate": {
+            "type": "number",
+            "format": "double",
+            "description": "The rate of the fee."
+          }
+        },
+        "required": [
+          "amount_fixed",
+          "amount_variable",
+          "rate"
+        ]
+      },
+      "Amounts": {
+        "type": "object",
+        "description": "A breakdown of the amounts of an order.",
+        "properties": {
+          "base": {
+            "$ref": "#/components/schemas/Money",
+            "description": "The base price, before any discounts and fees."
+          },
+          "subtotal": {
+            "$ref": "#/components/schemas/Money",
+            "description": "The price with discounts applied. subtotal = base - discount"
+          },
+          "subtotal_net": {
+            "$ref": "#/components/schemas/Money",
+            "description": "subtotal_net = price without fees."
+          },
+          "subtotal_tax": {
+            "$ref": "#/components/schemas/Tax",
+            "description": "The tax included in the subtotal."
+          },
+          "fee": {
+            "$ref": "#/components/schemas/Fee",
+            "description": "The fees applied to the subtotal."
+          },
+          "net": {
+            "$ref": "#/components/schemas/Money",
+            "description": "The net price, after discounts and fees. net = subtotal + fee"
+          },
+          "tax": {
+            "$ref": "#/components/schemas/Tax",
+            "description": "The taxes applied to the net price. tax = net * tax_rate"
+          },
+          "gross": {
+            "$ref": "#/components/schemas/Money",
+            "description": "The total price of the purchase. gross = net + tax"
+          },
+          "currency": {
+            "$ref": "#/components/schemas/Currency",
+            "description": "The currency of the purchase."
+          }
+        },
+        "required": [
+          "base",
+          "subtotal",
+          "subtotal_net",
+          "subtotal_tax",
+          "net",
+          "tax",
+          "gross",
+          "currency"
+        ]
+      },
+      "OrderItem": {
+        "type": "object",
+        "properties": {
+          "product": {
+            "$ref": "#/components/schemas/Product"
+          },
+          "price": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "quantity": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "product",
+          "price",
+          "quantity"
+        ]
+      },
+      "Customer": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "email"
+        ]
+      },
+      "Order": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "number": {
+            "type": "string"
+          },
+          "state": {
+            "$ref": "#/components/schemas/OrderState"
+          },
+          "amounts": {
+            "$ref": "#/components/schemas/Amounts"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OrderItem"
+            }
+          },
+          "customer": {
+            "$ref": "#/components/schemas/Customer"
+          },
+          "fulfilled_at": {
+            "description": "The date and time the post order requirement was fulfilled.",
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "number",
+          "state",
+          "price",
+          "created_at",
+          "updated_at",
+          "items",
+          "customer",
+          "amounts"
+        ]
+      },
+      "LeaseFee": {
+        "type": "object",
+        "description": "Fee details for lease agreements.",
+        "properties": {
+          "fee_fixed": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Fixed fee/downpayment in currency's minor unit."
+          },
+          "fee_rate": {
+            "type": "number",
+            "format": "double",
+            "description": "Variable fee rate including discount."
+          },
+          "discount_rate": {
+            "type": "number",
+            "format": "double",
+            "description": "Discount rate for the variable fee."
+          }
+        }
+      },
+      "Lease": {
+        "type": "object",
+        "description": "Lease agreement details.",
+        "properties": {
+          "started_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Time when the lease officially starts."
+          },
+          "instalment_amount": {
+            "type": "integer",
+            "format": "int64",
+            "description": "The monthly instalment amount the buyer will pay."
+          },
+          "instalments": {
+            "type": "integer",
+            "format": "int32",
+            "description": "The total number of instalments in the agreement."
+          },
+          "customer_fee": {
+            "$ref": "#/components/schemas/LeaseFee"
+          },
+          "platform_commission": {
+            "$ref": "#/components/schemas/LeaseFee"
+          }
+        },
+        "required": [
+          "started_at",
+          "instalment_amount",
+          "instalments",
+          "total_amount",
+          "customer_fee",
+          "platform_commission"
+        ]
+      },
+      "PaymentState": {
+        "type": "string",
+        "enum": [
+          "created",
+          "pending",
+          "succeeded",
+          "failed",
+          "cancelled"
+        ],
+        "x-enum-varnames": [
+          "PAYMENT_STATE_CREATED",
+          "PAYMENT_STATE_PENDING",
+          "PAYMENT_STATE_SUCCEEDED",
+          "PAYMENT_STATE_FAILED",
+          "PAYMENT_STATE_CANCELLED"
+        ]
+      },
+      "Payment": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "order_id": {
+            "type": "string"
+          },
+          "state": {
+            "$ref": "#/components/schemas/PaymentState"
+          },
+          "amounts": {
+            "$ref": "#/components/schemas/Amounts"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "order_id",
+          "state",
+          "amounts",
+          "created_at",
+          "updated_at"
+        ]
+      },
+      "Earning": {
+        "type": "object",
+        "properties": {
+          "tax": {
+            "$ref": "#/components/schemas/Tax",
+            "nullable": true
+          },
+          "amount": {
+            "$ref": "#/components/schemas/Money",
+            "description": "The gross earnings in the platform's currency after fees"
+          },
+          "net_amount": {
+            "$ref": "#/components/schemas/Money",
+            "description": "The net earnings in the platform's currency after fees and taxes"
+          }
+        },
+        "required": [
+          "id",
+          "state",
+          "amount",
+          "net_amount"
+        ]
+      },
+      "SalePayment": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Payment"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "earning": {
+                "$ref": "#/components/schemas/Earning",
+                "nullable": true
+              }
+            }
+          }
+        ]
+      },
+      "OrderNextAction": {
+        "type": "string",
+        "enum": [
+          "submit_transfer_code"
+        ],
+        "x-enum-varnames": [
+          "ORDER_NEXT_ACTION_SUBMIT_TRANSFER_CODE"
+        ]
+      },
+      "Sale": {
+        "title": "Sale",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Order"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "lease": {
+                "$ref": "#/components/schemas/Lease"
+              },
+              "payments": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/SalePayment"
+                },
+                "x-go-type-skip-optional-pointer": true
+              },
+              "next_action": {
+                "$ref": "#/components/schemas/OrderNextAction",
+                "nullable": true
+              },
+              "object": {
+                "type": "string",
+                "enum": [
+                  "sale"
+                ]
+              }
+            },
+            "required": [
+              "object"
+            ]
+          }
+        ]
       },
       "Webhook": {
         "type": "object",
@@ -1413,20 +3454,50 @@
           "updated_at": {
             "type": "string",
             "format": "date-time"
+          },
+          "object": {
+            "type": "string",
+            "enum": [
+              "webhook"
+            ]
           }
-        }
+        },
+        "required": [
+          "id",
+          "name",
+          "enabled",
+          "url",
+          "token",
+          "created_at",
+          "updated_at",
+          "object"
+        ]
       },
       "WebhookCreate": {
         "type": "object",
         "properties": {
           "name": {
-            "type": "string"
+            "type": "string",
+            "x-oapi-codegen-extra-tags": {
+              "form": "name",
+              "binding": "required,min=1,max=255"
+            }
           },
           "enabled": {
-            "type": "boolean"
+            "type": "boolean",
+            "default": false,
+            "x-oapi-codegen-extra-tags": {
+              "form": "enabled",
+              "binding": "omitempty"
+            },
+            "x-go-type-skip-optional-pointer": true
           },
           "url": {
-            "type": "string"
+            "type": "string",
+            "x-oapi-codegen-extra-tags": {
+              "form": "url",
+              "binding": "required"
+            }
           }
         },
         "required": [
@@ -1441,62 +3512,363 @@
             "type": [
               "string",
               "null"
-            ]
+            ],
+            "x-oapi-codegen-extra-tags": {
+              "form": "name",
+              "binding": "omitempty,min=1,max=255"
+            }
           },
           "enabled": {
             "type": [
               "boolean",
               "null"
-            ]
+            ],
+            "x-oapi-codegen-extra-tags": {
+              "form": "enabled",
+              "binding": "omitempty"
+            }
           }
         }
       },
-      "DomainSalePending": {
-        "type": "object",
-        "properties": {
-          "domain": {
-            "$ref": "#/components/schemas/Domain"
-          }
-        },
-        "required": [
-          "domain"
+      "EventType": {
+        "type": "string",
+        "description": "The type of a webhook event",
+        "enum": [
+          "sale.pending",
+          "sale.succeeded",
+          "sale.failed",
+          "sale.cancelled",
+          "sale.leased",
+          "sale.requires_action",
+          "negotiation.created",
+          "negotiation.message.created"
+        ],
+        "x-enum-varnames": [
+          "EVENT_TYPE_SALE_PENDING",
+          "EVENT_TYPE_SALE_SUCCEEDED",
+          "EVENT_TYPE_SALE_FAILED",
+          "EVENT_TYPE_SALE_CANCELLED",
+          "EVENT_TYPE_SALE_LEASED",
+          "EVENT_TYPE_SALE_REQUIRES_ACTION",
+          "EVENT_TYPE_NEGOTIATION_CREATED",
+          "EVENT_TYPE_NEGOTIATION_MESSAGE_CREATED"
         ]
       },
-      "DomainSaleCancelled": {
+      "EventBase": {
         "type": "object",
         "properties": {
-          "domain": {
-            "$ref": "#/components/schemas/Domain"
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "$ref": "#/components/schemas/EventType"
+          },
+          "timestamp": {
+            "deprecated": true,
+            "type": "string",
+            "format": "date-time"
+          },
+          "occured_at": {
+            "type": "string",
+            "format": "date-time"
           }
         },
         "required": [
-          "domain"
+          "id",
+          "type",
+          "timestamp"
         ]
       },
-      "DomainSaleSucceeded": {
-        "type": "object",
-        "properties": {
-          "domain": {
-            "$ref": "#/components/schemas/Domain"
+      "EventData": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/Sale"
+          },
+          {
+            "$ref": "#/components/schemas/Negotiation"
+          },
+          {
+            "$ref": "#/components/schemas/NegotiationMessage"
           }
-        },
-        "required": [
-          "domain"
+        ],
+        "discriminator": {
+          "propertyName": "object",
+          "mapping": {
+            "sale": "#/components/schemas/Sale",
+            "negotiation": "#/components/schemas/Negotiation",
+            "negotiation_message": "#/components/schemas/NegotiationMessage"
+          }
+        }
+      },
+      "Event": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/EventBase"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "data": {
+                "$ref": "#/components/schemas/EventData"
+              }
+            },
+            "required": [
+              "data"
+            ]
+          }
         ]
       },
-      "DomainSaleFailed": {
-        "type": "object",
-        "properties": {
-          "domain": {
-            "$ref": "#/components/schemas/Domain"
+      "SalePendingEvent": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/EventBase"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/EventType"
+                  },
+                  {
+                    "const": "sale.pending"
+                  }
+                ]
+              },
+              "data": {
+                "$ref": "#/components/schemas/Sale"
+              }
+            }
           }
-        },
-        "required": [
-          "domain"
+        ]
+      },
+      "SaleSucceededEvent": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/EventBase"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/EventType"
+                  },
+                  {
+                    "const": "sale.succeeded"
+                  }
+                ]
+              },
+              "data": {
+                "$ref": "#/components/schemas/Sale"
+              }
+            }
+          }
+        ]
+      },
+      "SaleFailedEvent": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/EventBase"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/EventType"
+                  },
+                  {
+                    "const": "sale.failed"
+                  }
+                ]
+              },
+              "data": {
+                "$ref": "#/components/schemas/Sale"
+              }
+            }
+          }
+        ]
+      },
+      "SaleCancelledEvent": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/EventBase"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/EventType"
+                  },
+                  {
+                    "const": "sale.cancelled"
+                  }
+                ]
+              },
+              "data": {
+                "$ref": "#/components/schemas/Sale"
+              }
+            }
+          }
+        ]
+      },
+      "SaleRequiresActionEvent": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/EventBase"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/EventType"
+                  },
+                  {
+                    "const": "sale.requires_action"
+                  }
+                ]
+              },
+              "data": {
+                "$ref": "#/components/schemas/Sale"
+              }
+            }
+          }
+        ]
+      },
+      "SaleLeasedEvent": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/EventBase"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/EventType"
+                  },
+                  {
+                    "const": "sale.leased"
+                  }
+                ]
+              },
+              "data": {
+                "$ref": "#/components/schemas/Sale"
+              }
+            }
+          }
+        ]
+      },
+      "NegotiationCreatedEvent": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/EventBase"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/EventType"
+                  },
+                  {
+                    "const": "negotiation.created"
+                  }
+                ]
+              },
+              "data": {
+                "$ref": "#/components/schemas/Negotiation"
+              }
+            }
+          }
+        ]
+      },
+      "NegotiationMessageCreatedEvent": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/EventBase"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/EventType"
+                  },
+                  {
+                    "const": "negotiation.message.created"
+                  }
+                ]
+              },
+              "data": {
+                "$ref": "#/components/schemas/NegotiationMessage"
+              }
+            },
+            "required": [
+              "type",
+              "data"
+            ]
+          }
         ]
       }
     },
+    "parameters": {
+      "PaginationLimit": {
+        "name": "limit",
+        "in": "query",
+        "description": "Limit the number of items returned",
+        "schema": {
+          "type": "integer",
+          "format": "int32",
+          "default": 100,
+          "minimum": 1,
+          "maximum": 1000
+        },
+        "x-oapi-codegen-extra-tags": {
+          "form": "limit",
+          "binding": "omitempty,min=1,max=1000",
+          "default": "100"
+        }
+      },
+      "PaginationOffset": {
+        "name": "offset",
+        "in": "query",
+        "description": "Offset for pagination",
+        "schema": {
+          "type": "integer",
+          "format": "int32",
+          "default": 0,
+          "minimum": 0
+        },
+        "x-oapi-codegen-extra-tags": {
+          "form": "offset",
+          "binding": "omitempty,min=0",
+          "default": "0"
+        }
+      }
+    },
     "requestBodies": {
+      "DomainDeleteBulk": {
+        "description": "Domain bulk delete input",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/DomainBulkFilter"
+            }
+          }
+        }
+      },
       "DomainUpdateBulk": {
         "description": "Domain bulk update input",
         "content": {
@@ -1525,6 +3897,34 @@
               "$ref": "#/components/schemas/DomainImportCreate"
             }
           }
+        },
+        "x-go-name": "DomainImportCreateInput"
+      },
+      "ReplyNegotiation": {
+        "description": "Reply to a negotiation",
+        "content": {
+          "application/json": {
+            "schema": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/ReplyNegotiationAccepted"
+                },
+                {
+                  "$ref": "#/components/schemas/ReplyNegotiationPrice"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "ReadReceiptUpdate": {
+        "description": "Update the receipt of a negotiation",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ReadReceipt"
+            }
+          }
         }
       },
       "WebhookCreate": {
@@ -1535,7 +3935,8 @@
               "$ref": "#/components/schemas/WebhookCreate"
             }
           }
-        }
+        },
+        "x-go-name": "WebhookCreateInput"
       },
       "WebhookUpdate": {
         "description": "Webhook to update",
@@ -1547,42 +3948,12 @@
           }
         }
       },
-      "DomainSalePending": {
-        "description": "Event payload for when a domain sale is pending",
+      "WebhookEvent": {
+        "description": "Webhook event payload",
         "content": {
           "application/json": {
             "schema": {
-              "$ref": "#/components/schemas/DomainSalePending"
-            }
-          }
-        }
-      },
-      "DomainSaleCancelled": {
-        "description": "Event payload for when a domain sale was cancelled",
-        "content": {
-          "application/json": {
-            "schema": {
-              "$ref": "#/components/schemas/DomainSaleCancelled"
-            }
-          }
-        }
-      },
-      "DomainSaleSucceeded": {
-        "description": "Event payload for when a domain sale succeeded",
-        "content": {
-          "application/json": {
-            "schema": {
-              "$ref": "#/components/schemas/DomainSaleSucceeded"
-            }
-          }
-        }
-      },
-      "DomainSaleFailed": {
-        "description": "Event payload for when a domain sale failed",
-        "content": {
-          "application/json": {
-            "schema": {
-              "$ref": "#/components/schemas/DomainSaleFailed"
+              "$ref": "#/components/schemas/Event"
             }
           }
         }
