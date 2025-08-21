@@ -9,7 +9,7 @@
       "url": "https://fruits.co/contact",
       "email": "dev@fruits.co"
     },
-    "version": "0.0.4",
+    "version": "0.0.5",
     "license": {
       "name": "Apache 2.0",
       "url": "https://www.apache.org/licenses/LICENSE-2.0.html"
@@ -762,7 +762,7 @@
             },
             "x-oapi-codegen-extra-tags": {
               "form": "state",
-              "binding": "omitempty"
+              "binding": "omitempty,oneof=requires_payment succeeded cancelled failed pending leased requires_action processing"
             }
           }
         ],
@@ -1308,22 +1308,7 @@
         "content": {
           "application/json": {
             "schema": {
-              "title": "DomainImportCreateResponse",
-              "type": "object",
-              "properties": {
-                "import": {
-                  "$ref": "#/components/schemas/DomainImport"
-                },
-                "diff": {
-                  "$ref": "#/components/schemas/DomainImportDiff"
-                },
-                "stats": {
-                  "$ref": "#/components/schemas/DomainImportStats"
-                }
-              },
-              "required": [
-                "import"
-              ]
+              "$ref": "#/components/schemas/DomainImport"
             }
           }
         },
@@ -1334,22 +1319,7 @@
         "content": {
           "application/json": {
             "schema": {
-              "title": "DomainImportGetResponse",
-              "type": "object",
-              "properties": {
-                "import": {
-                  "$ref": "#/components/schemas/DomainImport"
-                },
-                "diff": {
-                  "$ref": "#/components/schemas/DomainImportDiff"
-                },
-                "stats": {
-                  "$ref": "#/components/schemas/DomainImportStats"
-                }
-              },
-              "required": [
-                "import"
-              ]
+              "$ref": "#/components/schemas/DomainImport"
             }
           }
         },
@@ -2549,70 +2519,6 @@
           "state"
         ]
       },
-      "DomainImportDiffItem": {
-        "type": "object",
-        "description": "A domain import diff item",
-        "properties": {
-          "new": {
-            "$ref": "#/components/schemas/DomainImportSourceItem"
-          },
-          "old": {
-            "$ref": "#/components/schemas/DomainImportSourceItem"
-          }
-        }
-      },
-      "DomainImportDiff": {
-        "type": "object",
-        "description": "A domain import diff",
-        "properties": {
-          "additions": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/DomainImportDiffItem"
-            }
-          },
-          "deletions": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/DomainImportDiffItem"
-            }
-          },
-          "updates": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/DomainImportDiffItem"
-            }
-          }
-        },
-        "required": [
-          "additions",
-          "deletions",
-          "updates"
-        ]
-      },
-      "DomainImportStats": {
-        "type": "object",
-        "description": "A domain import stats object",
-        "properties": {
-          "additions": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "deletions": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "updates": {
-            "type": "integer",
-            "format": "int32"
-          }
-        },
-        "required": [
-          "additions",
-          "deletions",
-          "updates"
-        ]
-      },
       "NegotiationFilterStatus": {
         "type": "string",
         "enum": [
@@ -2645,7 +2551,10 @@
         "type": "object",
         "properties": {
           "field": {
-            "$ref": "#/components/schemas/NegotiationSortFieldName"
+            "$ref": "#/components/schemas/NegotiationSortFieldName",
+            "x-oapi-codegen-extra-tags": {
+              "binding": "omitempty,oneof=product.name product.price.amount latest_offer.price.amount latest_activity_at"
+            }
           },
           "order": {
             "$ref": "#/components/schemas/SortOrder"
